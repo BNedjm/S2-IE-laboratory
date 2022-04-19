@@ -1,1 +1,151 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+
+using namespace std;
+
+class Student {
+public:
+    Student (string name, string surname){
+        name_ = name;
+        surname_ = surname;
+    }
+
+    void set_name(string name){
+        name_ = name;
+    }
+
+    string get_name(){
+        return name_;
+    }
+
+    bool Set_album_number(double album_number){
+
+        if(album_number > 9999 && album_number <= 999999){
+            album_number_ = album_number;
+            return true;
+        }
+        else {
+            cout << "Data invalid.\nAlbum number must contain from 5 to 6 digits." << endl;
+            return false;
+        }
+    }
+
+    void Print_student_summary(){
+        cout << "Full name : " << name_ << " " << surname_ << endl;
+        cout << "Album number : " << album_number_ << endl;
+        cout << "Grades : ";
+        for(size_t i = 0; i < grades.size(); i++){
+            cout << grades.at(i) << " ";
+        }
+        cout << endl;
+    }
+
+    bool Add_grade(float new_grade){
+        if(new_grade >= 2.0 && new_grade <= 5.0){
+            grades.push_back(new_grade);
+            return true;
+        }
+        else {
+            cout << "Data invalid.\nGrades must have a value between 2.0 and 5.0." << endl;
+            return false;
+        }
+    }
+
+    float Avg_grade(){
+        float sum = accumulate(grades.begin(), grades.end(), 0.0f);
+        return sum/grades.size();
+    }
+
+    void Passed(){
+        int count = 0;
+        for(size_t i = 0; i < grades.size(); i++){
+            if(grades.at(i) == 2.0){
+                count++;
+            }
+        }
+        cout << "Did this student pass?" << endl;
+        if (Avg_grade() > 2.0 && count <= 1){
+            cout << "Yeah! with an average of " << Avg_grade() << endl;
+        }
+        else{
+            cout << "Maybe not! student has an average of "<< Avg_grade() << " but more than one 2.0."<< endl;
+        }
+    }
+
+private:
+    string name_;
+    string surname_;
+    double album_number_;
+    vector<float> grades;
+};
+
+class Complex {
+public:
+    Complex (float real_part, float imag_part){
+        real_part_ = real_part;
+        imag_part_ = imag_part;
+    }
+    Complex (float real_part){
+        real_part_ = real_part;
+        imag_part_ = 0;
+    }
+
+    void set_real(float real_part){
+        real_part_ = real_part;
+    }
+
+    float get_real (){
+        return real_part_;
+    }
+
+    void set_imag(float imag_part){
+        imag_part_ = imag_part;
+    }
+
+    float get_imag(){
+        return imag_part_;
+    }
+
+    void display(){
+        if(imag_part_ >= 0)
+            cout << real_part_ << " + i" << imag_part_;
+        else
+            cout << real_part_ << " - i" << abs(imag_part_) << endl;
+    }
+
+    Complex add(Complex Added){
+        return Complex(real_part_+Added.real_part_, imag_part_+Added.imag_part_);
+    }
+
+private:
+    float real_part_;
+    float imag_part_;
+};
+
+int main()
+{
+    //Student class functionality test
+    Student JJ("JJ", "who");
+    JJ.Set_album_number(121219);
+    JJ.Add_grade(2.0);
+    JJ.Add_grade(3.0);
+    JJ.Add_grade(4.0);
+    JJ.Add_grade(5.0);
+    JJ.Add_grade(2.0);
+    JJ.Print_student_summary();
+    JJ.Passed();
+
+    //Complex class functionality test
+    Complex a(1.0, -2.0); // creates 1-2i
+    Complex b(3.14); // creates 3.14
+
+    b.set_imag(-5);
+
+    Complex c = a.add(b);
+    c.display(); // prints 4.14-7i
+    
+    return 0;
+}
 
