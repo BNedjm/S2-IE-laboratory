@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <iomanip>
+
+
+using namespace std;
+
+class Time{
+public:
+    Time(int decimal = 0){
+        seconds_ = decimal % 60;
+        minutes_ = ((decimal - seconds_) / 60 ) % 60;
+        hours_ = ((decimal - seconds_ - 60 * minutes_) / 3600) % 24;
+    }
+
+    operator int () const
+        {
+            int output;
+            output = 3600*hours_+60*minutes_+seconds_;
+            return output;
+        }
+
+    Time operator+(const Time &rhs) const {
+        return Time(3600*(hours_+rhs.hours_)+60*(minutes_+rhs.minutes_)+(seconds_+rhs.seconds_));
+    }
+
+    Time operator-(const Time &rhs) const {
+        return Time(3600*(hours_-rhs.hours_)+60*(minutes_-rhs.minutes_)+(seconds_-rhs.seconds_));
+    }
+
+    friend ostream& operator<<(ostream &out, const Time& time){
+        if(time.hours_!=0)
+            out << fixed << setw(2) << setfill('0') << time.hours_ << "h";
+        if(time.minutes_!=0){
+            if(time.hours_!=0){
+                out << ":";
+            }
+            out << fixed << setw(2) << setfill('0') << time.minutes_ << "m";
+        }
+        if(time.seconds_!=0){
+            if(time.minutes_!=0){
+                out << ":";
+            }
+            out << fixed << setw(2) << setfill('0') << time.seconds_ << "s" << endl;
+        }
+        return out;
+    }
+
+    friend istream &operator>>(std::istream &str, Time& time){
+        string strng;
+        str >> strng;
+        size_t pos = strng.find('h:');
+        if (string::npos == pos)
+        {
+            time.hours_ = 0;
+        }
+        else
+        {
+            time.hours_ = stoi(strng.substr(0,pos));
+            strng.erase(0,pos+1);
+            pos = strng.find('m:');
+            if (string::npos == pos)
+            {
+                time.minutes_ = 0;
+            }
+            else
+            {
+                time.minutes_ = stoi(strng.substr(0,pos));
+                strng.erase(0,pos+1);
+                pos = strng.find('s');
+                if (string::npos == pos)
+                {
+                    time.seconds_ = 0;
+                }
+                else
+                {
+                    time.seconds_ = stoi(strng);
+                }
+            }
+
+        }
+        return str;
+    }
+
+
+private:
+    int seconds_;
+    int minutes_;
+    int hours_;
+};
+
+int main()
+{
+    Time t1(200);
+    cout << t1; // displays 03m:20s
+    Time t2;
+    cin >> t2; // user enters 10h:12m:01s
+    cout << t2;
+    Time t3 = t2 - t1; // 10h:8m:41s
+    cout << t3;
+    int t3s = t3; // 36521
+    cout << t3s << endl;
+    return 0;
+}
