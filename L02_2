@@ -1,0 +1,90 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <iomanip>
+
+using namespace std;
+
+class Item{
+public:
+    Item(string name, float net_price, char VAT, int amount){
+        name_ = name;
+        net_price_ = net_price;
+        VAT_ = VAT;
+        amount_ = amount;
+    }
+
+    string get_name_(){
+        return name_;
+    }
+
+    float get_net_price_(){
+        return net_price_;
+    }
+
+    char get_VAT_(){
+        return VAT_;
+    }
+
+    int get_amount_(){
+        return amount_;
+    }
+
+private:
+    string name_;
+    float net_price_;
+    char VAT_;
+    int amount_;
+};
+
+class Invoice{
+public:
+    Invoice( long long int Seller_NIP = 0, long long int Buyer_NIP = 0){
+        Seller_NIP_ = Seller_NIP;
+        Buyer_NIP_ = Buyer_NIP;
+    }
+
+    void add_item(Item new_item){
+        items_.push_back(new_item);
+    }
+
+    friend ostream& operator<<(ostream &out, Invoice& In){
+        out << "------------------VAT invoice------------------" << endl;
+        out << "===============================================" << endl;
+        out << "Seller: " << In.Seller_NIP_ << "\t" << "Buyer: " << In.Buyer_NIP_ << endl << endl;
+        out << "                  c.j. VAT   il.    net   total" << endl;
+        float net_sum = 0;
+        float ttl_sum = 0;
+        float VAT = 0;
+        for (size_t i=0; i < sizeof (In.items_)/12; i++){
+            if(In.items_.at(i).get_VAT_()=='A')
+                VAT = 1.23;
+            else if(In.items_.at(i).get_VAT_()=='B')
+                VAT = 1.08;
+            else if (In.items_.at(i).get_VAT_()=='C')
+                VAT = 1.00;
+            out << i+1 << fixed << setprecision(2) << ". " << In.items_.at(i).get_name_() << "\t| " << In.items_.at(i).get_net_price_()  << "  " << In.items_.at(i).get_VAT_() << " | " << setw(3) << In.items_.at(i).get_amount_() << " | " << fixed << setw(5) << In.items_.at(i).get_net_price_()*In.items_.at(i).get_amount_() << "\t| " << fixed << setw(5) << VAT*In.items_.at(i).get_net_price_()*In.items_.at(i).get_amount_() << endl;
+            net_sum+=In.items_.at(i).get_net_price_()*In.items_.at(i).get_amount_();
+            ttl_sum+=VAT*In.items_.at(i).get_net_price_()*In.items_.at(i).get_amount_();
+        }
+        out << endl << "------------------------------------ TOTAL ----" << endl;
+        out << "                                  " << net_sum << " | " << ttl_sum << endl;
+        return out;
+    }
+
+
+private:
+    long long int Seller_NIP_;
+    long long int Buyer_NIP_;
+    vector <Item> items_;
+};
+
+int main()
+{
+    Invoice inv(7770003699, 0123456747);
+    inv.add_item(Item("M3 screw", 0.37, 'A', 100));
+    inv.add_item(Item("2 mm drill", 2.54, 'B', 2));
+    std::cout << inv << std::endl;
+    return 0;
+}
