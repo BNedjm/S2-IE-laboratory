@@ -32,19 +32,64 @@ public:
 
     void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key){
         float dt = elapsed.asSeconds();
-        if(key == sf::Keyboard::Right){
-            if(getGlobalBounds().left+getGlobalBounds().width <= r_bound_)
-            move(abs(x_speed_)*dt,0);
-        }else if (key == sf::Keyboard::Left){
-            if(getGlobalBounds().left >= l_bound_)
-            move(-abs(x_speed_)*dt,0);
-        }else if (key == sf::Keyboard::Up){
-            if(getGlobalBounds().top >= u_bound_)
-            move(0, -abs(y_speed_)*dt);
-        }else if (key == sf::Keyboard::Down){
-            if(getGlobalBounds().top+getGlobalBounds().height <= d_bound_)
-                move(0, abs(x_speed_)*dt);
+        bool up = false, down = false, left = false, right = false;
+        int x = 0, y = 0;
+        //--------------------------------------------------------------------------
+        //sf::Keyboard::isKeyPressed(key) is added here to stop the object if key is not pressed
+        if(key == sf::Keyboard::Right && sf::Keyboard::isKeyPressed(key)){ 
+            if(getGlobalBounds().left+getGlobalBounds().width <= r_bound_){
+                right = true;
+            }
         }
+        else if (key == sf::Keyboard::Left && sf::Keyboard::isKeyPressed(key)){
+            if(getGlobalBounds().left >= l_bound_){
+                left = true;
+            }
+        }
+        if (key == sf::Keyboard::Up && sf::Keyboard::isKeyPressed(key)){
+            if(getGlobalBounds().top >= u_bound_){
+                up = true;
+            }
+        }
+        else if (key == sf::Keyboard::Down && sf::Keyboard::isKeyPressed(key)){
+            if(getGlobalBounds().top+getGlobalBounds().height <= d_bound_){
+                down = true;
+            }
+        }
+        //--------------------------------------------------------------------------
+        // I added this section for the sake of diagonal motion
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+            if(getGlobalBounds().left+getGlobalBounds().width <= r_bound_ && getGlobalBounds().top >= u_bound_){
+                right = true;
+                up = true;
+            }
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+            if(getGlobalBounds().left >= l_bound_ && getGlobalBounds().top >= u_bound_){
+                left = true;
+                up = true;
+            }
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+            if(getGlobalBounds().left+getGlobalBounds().width <= r_bound_ && getGlobalBounds().top+getGlobalBounds().height <= d_bound_){
+                right = true;
+                down = true;
+            }
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+            if(getGlobalBounds().left >= l_bound_ && getGlobalBounds().top+getGlobalBounds().height <= d_bound_){
+                left = true;
+                down = true;
+            }
+        }
+        //--------------------------------------------------------------------------
+        if (left)
+            x-=x_speed_;
+        if (right)
+            x+=x_speed_;
+        if (up)
+            y-=y_speed_;
+        if (down)
+            y+=y_speed_;
+        move(x*dt,y*dt);
     }
 
     bool isClicked(sf::Vector2i &mouse_position) const{
@@ -161,6 +206,5 @@ int main() {
         // end the current frame
         window.display();
     }
-
     return 0;
 }
