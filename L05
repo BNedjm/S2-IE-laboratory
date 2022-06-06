@@ -9,51 +9,26 @@
 
 class Labyrinth  : public sf::Sprite {
 public:
-    Labyrinth (/*const sf::Vector2f &position, const sf::Vector2f &scale*/)
-    {
-        //setPosition(position);
-        //setScale(scale);
-    }
+    void setSpeed(int xspeed, int yspeed)
+     {
+      m_speed_x = xspeed;
+      m_speed_y = yspeed;
+     }
 
-    void setSpeed(const int& x_speed, const int& y_speed/*, const int & ro_speed*/) {
-        x_speed_ = x_speed;
-        y_speed_ = y_speed;
-        //ro_speed_ = ro_speed;
-    }
+    void setBounds(int left, int right, int top, int bottom)
+     {
+      bound_top = top;
+      bound_bottom = bottom;
+      bound_right = right;
+      bound_left = left;
+     }
 
-    void setBounds(const float& l_bound, const float& r_bound,const float& u_bound,const float& d_bound){
-        l_bound_  = l_bound  ;
-        r_bound_  = r_bound  ;
-        u_bound_  = u_bound  ;
-        d_bound_  = d_bound  ;
-    }
 
-    void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key, int &ind){
+    /*void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key, int &ind){
         float dt = elapsed.asSeconds();
         bool up = false, down = false, left = false, right = false;
         int x = 0, y = 0;
-        //--------------------------------------------------------------------------
-        //sf::Keyboard::isKeyPressed(key) is added here to stop the object if key is not pressed
-        if(key == sf::Keyboard::Right && sf::Keyboard::isKeyPressed(key)){
-            if(getGlobalBounds().left+getGlobalBounds().width <= r_bound_){
-                right = true;
-            }
-        }
-        else if (key == sf::Keyboard::Left && sf::Keyboard::isKeyPressed(key)){
-            if(getGlobalBounds().left >= l_bound_){
-                left = true;
-            }
-        }
-        if (key == sf::Keyboard::Up && sf::Keyboard::isKeyPressed(key)){
-            if(getGlobalBounds().top >= u_bound_){
-                up = true;
-            }
-        }
-        else if (key == sf::Keyboard::Down && sf::Keyboard::isKeyPressed(key)){
-            if(getGlobalBounds().top+getGlobalBounds().height <= d_bound_){
-                down = true;
-            }
-        }
+
         //--------------------------------------------------------------------------
         // I added this section for the sake of diagonal motion
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
@@ -105,53 +80,126 @@ public:
         if (down)
             y+=y_speed_;
         move(x*dt,y*dt);
-    }
+    }*/
 
-    void collusion (Labyrinth &wall){
-        //ind_ = 5; //NAN
-        if(getGlobalBounds().top <= wall.getGlobalBounds().top+wall.getGlobalBounds().height
-                && getGlobalBounds().top > wall.getGlobalBounds().top
-                && getGlobalBounds().left < wall.getGlobalBounds().left+wall.getGlobalBounds().width
-                && getGlobalBounds().left+getGlobalBounds().width > wall.getGlobalBounds().left){
-            ind_ = 1; //top
-        }else if(getGlobalBounds().top+getGlobalBounds().height >= wall.getGlobalBounds().top
-                && getGlobalBounds().top < wall.getGlobalBounds().top
-                && getGlobalBounds().left < wall.getGlobalBounds().left+wall.getGlobalBounds().width
-                && getGlobalBounds().left+getGlobalBounds().width > wall.getGlobalBounds().left){
-            ind_ = 2; //down
-        }else if(getGlobalBounds().left <= wall.getGlobalBounds().left+wall.getGlobalBounds().width
-                && getGlobalBounds().left > wall.getGlobalBounds().left
-                && getGlobalBounds().top < wall.getGlobalBounds().top+wall.getGlobalBounds().height
-                && getGlobalBounds().top+getGlobalBounds().height > wall.getGlobalBounds().top){
-            ind_ = 3; //left
-        }else if(getGlobalBounds().left+getGlobalBounds().width >= wall.getGlobalBounds().left
-                && getGlobalBounds().left < wall.getGlobalBounds().left
-                && getGlobalBounds().top < wall.getGlobalBounds().top+wall.getGlobalBounds().height
-                && getGlobalBounds().top+getGlobalBounds().height > wall.getGlobalBounds().top){
-            ind_ = 4; //right
-        }
-    }
+    void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key, const std::vector<Labyrinth> &obstacles)
+     {
+      sf::FloatRect rectangle_bounds = getGlobalBounds();
+      bool top=0, left=0, bottom=0, right=0;
 
-    int get_ind_(){
-        return ind_;
-    }
+
+      for(auto &obstacle : obstacles)
+      {
+       if(Collision_T(obstacle) == 1){top = 1;}
+       if(Collision_L(obstacle) == 1){left = 1;}
+       if(Collision_B(obstacle) == 1){bottom = 1;}
+       if(Collision_R(obstacle) == 1){right = 1;}
+      }
+
+
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && rectangle_bounds.top > bound_top && bottom != true)
+       {
+        move(0, -m_speed_y*elapsed.asSeconds());
+       }
+
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && rectangle_bounds.top+rectangle_bounds.height < bound_bottom && top != true)
+       {
+        move(0, m_speed_y*elapsed.asSeconds());
+       }
+
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rectangle_bounds.left + rectangle_bounds.width < bound_right && left != true)
+       {
+        move(m_speed_x*elapsed.asSeconds(), 0);
+       }
+
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rectangle_bounds.left > bound_left && right != true)
+       {
+        move(-m_speed_x*elapsed.asSeconds(), 0);
+       }
+      //--------------------------------------------------------------------------
+      // I added this section for the sake of diagonal motion
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && rectangle_bounds.top > bound_top && bottom != true
+         && sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rectangle_bounds.left + rectangle_bounds.width < bound_right && left != true){
+          move(m_speed_x*elapsed.asSeconds(), -m_speed_y*elapsed.asSeconds()); //up-right
+      } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && rectangle_bounds.top > bound_top && bottom != true
+                 && sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rectangle_bounds.left > bound_left && right != true){
+          move(-m_speed_x*elapsed.asSeconds(), -m_speed_y*elapsed.asSeconds()); //up-left
+      }
+      if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && rectangle_bounds.top+rectangle_bounds.height < bound_bottom && top != true
+         && sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rectangle_bounds.left + rectangle_bounds.width < bound_right && left != true){
+          move(m_speed_x*elapsed.asSeconds(), m_speed_y*elapsed.asSeconds()); //down-right
+      } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && rectangle_bounds.top+rectangle_bounds.height < bound_bottom && top != true
+                 && sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rectangle_bounds.left > bound_left && right != true){
+          move(-m_speed_x*elapsed.asSeconds(), m_speed_y*elapsed.asSeconds()); //down-left
+      }
+     }
+
+    bool Collision_T(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.top+guy_bounds.height >= wall_bounds.top-3) && (guy_bounds.top < wall_bounds.top)
+      && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_R(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.left <= wall_bounds.left+wall_bounds.width+3) && (guy_bounds.left+guy_bounds.width > wall_bounds.left+wall_bounds.width)
+       && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_B(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.top <= wall_bounds.top + wall_bounds.height+3) && (guy_bounds.top+guy_bounds.height > wall_bounds.top+wall_bounds.height)
+       && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_L(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.left+guy_bounds.width >= wall_bounds.left-3) && (guy_bounds.left < wall_bounds.left)
+       && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
 
 private:
-    int ind_ = 0;
-    int x_speed_ = 0 ;
-    int y_speed_ = 0 ;
-    //int ro_speed_ = 0 ;
-    float l_bound_ = 0;
-    float r_bound_ = 0;
-    float u_bound_ = 0;
-    float d_bound_ = 0;
-    //bool selected_ = false;
+    int m_speed_x = 200;
+    int m_speed_y = 200;
+    int bound_top = 0;
+    int bound_bottom = 0;
+    int bound_left = 0;
+    int bound_right = 0;
 };
 
 int main()
 {
-    // create the window
-    sf::RenderWindow window(sf::VideoMode(800, 800), "Labyrinth");
+    sf::RenderWindow window(sf::VideoMode(800, 800), "Labyrinth"); // create the window
+
+    sf::Clock clock;
 
     // create textures
     sf::Texture texture_grass, texture_wall, texture_guy;
@@ -191,8 +239,8 @@ int main()
         wall.setTextureRect(sf::IntRect(0, 0, 10/sc_.x, ((window.getSize().y-100)/sc_.y)));
         wall.setPosition(0, 10);
         walls.push_back(wall);
-        wall.setTextureRect(sf::IntRect(0, 0, 10/sc_.x, ((window.getSize().y-20)/sc_.y)));
-        wall.setPosition(window.getSize().x-10, 10);
+        wall.setTextureRect(sf::IntRect(0, 0, 10/sc_.x, ((window.getSize().y-100)/sc_.y)));
+        wall.setPosition(window.getSize().x-10, 90);
         walls.push_back(wall);
         // puzzle walls
         // 1 y
@@ -312,21 +360,15 @@ int main()
         return 1;
     }
     guy.setTexture(texture_guy);
-    guy.setScale(.5,.5);
-    guy.setPosition(20,20.0);
+    guy.setScale(.9,.9);
+    guy.setPosition(20,720.0);
     guy.setBounds(0, window.getSize().x, 0, window.getSize().y);
     guy.setSpeed(100, 100);
-
-    //------------------------------------------------------------------
-
-    // clock
-    sf::Clock clock;
 
     // run the program as long as the window is open
     while (window.isOpen()) {
 
         sf::Time elapsed = clock.restart();
-        int ind_ = 0;
 
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
@@ -336,22 +378,16 @@ int main()
                 window.close();
         }
 
-
-
-
         // clear the window with black color
         window.clear(sf::Color::Black);
 
         // draw everything here...
         window.draw(grass);
         for (auto &w : walls){
-            guy.collusion(w);
-            ind_ = guy.get_ind_();
             window.draw(w);
         }
-        std::cout << ind_ << "\t" <<guy.getGlobalBounds().height << std::endl;
-        guy.moveInDirection(elapsed, event.key.code, ind_); // move stuff
         window.draw(guy);
+        guy.moveInDirection(elapsed, event.key.code, walls);
 
         // end the current frame
         window.display();
