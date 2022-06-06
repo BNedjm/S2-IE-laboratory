@@ -82,7 +82,7 @@ public:
         move(x*dt,y*dt);
     }*/
 
-    void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key, const std::vector<Labyrinth> &obstacles)
+    void moveInDirection(const sf::Time &elapsed, const sf::Keyboard::Key &key, const std::vector<sf::Sprite> &obstacles)
      {
       sf::FloatRect rectangle_bounds = getGlobalBounds();
       bool top=0, left=0, bottom=0, right=0;
@@ -207,7 +207,7 @@ int main()
 
     //------------------------------------------------------------------
 
-    Labyrinth grass;
+    sf::Sprite grass;
     if (!texture_grass.loadFromFile("grass.png")) {
         std::cerr << "Could not load texture" << std::endl;
         return 1;
@@ -219,8 +219,8 @@ int main()
 
     //------------------------------------------------------------------
 
-    Labyrinth wall;
-    std::vector<Labyrinth> walls;
+    sf::Sprite wall;
+    std::vector<sf::Sprite> walls;
 
     if (!texture_wall.loadFromFile("wall.png")) {
         std::cerr << "Could not load texture" << std::endl;
