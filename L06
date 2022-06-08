@@ -36,23 +36,14 @@ public:
         var_y_speed_ += 0.5 * g * pow(t_falling,2);
     }
 
-    void jump(const sf::Time &elapsed){
-        float dt = elapsed.asSeconds();
-        int g = 10;
-        t_falling += dt;
-        var_y_speed_ = - 0.5 * g  * y_speed_ * dt;
-        //move(0, - 5 * y_speed_ * elapsed.asSeconds() + 0.5 * g * pow(t_falling,2));
+    void jump(){
+        var_y_speed_ = 2 * (- y_speed_);
     }
 
-    void reset_state(){
-        //jumping_ = state;
+    void reset_(){
         t_falling = 0.0;
         var_y_speed_ = 0;
     }
-
-    //bool get_state(){
-        //return jumping_;
-    //}
 
     void animate(const sf::Time &elapsed){
         //bouncce();
@@ -90,12 +81,12 @@ public:
 
       if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rectangle_bounds.left + rectangle_bounds.width < r_bound_ && right != true)
        {
-        move(x_speed_*elapsed.asSeconds(), var_y_speed_);
+        move(x_speed_*elapsed.asSeconds(), var_y_speed_*elapsed.asSeconds());
        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rectangle_bounds.left > l_bound_ && left != true)
        {
-        move(-x_speed_*elapsed.asSeconds(), var_y_speed_);
+        move(-x_speed_*elapsed.asSeconds(), var_y_speed_*elapsed.asSeconds());
        } else {
-          move(0, var_y_speed_);
+          move(0, var_y_speed_*elapsed.asSeconds());
       }
      }
 
@@ -208,6 +199,8 @@ int main()
 
     sf::Texture tex_grass, tex_platform, texture_guy;
 
+    float dt = 0;
+
     sf::Sprite grass; //grass def
     if (!tex_grass.loadFromFile("grass.png")) {
         std::cerr << "Could not load texture" << std::endl;
@@ -232,12 +225,24 @@ int main()
         platform.setPosition(0,window.getSize().y-120);
         platform.setTextureRect(sf::IntRect(0, 0, window.getSize().x/.5, 120/.5));
         platforms.push_back(platform);
+
+        platform.setPosition(400, 250);
+        platform.setTextureRect(sf::IntRect(0, 0, 200/.5, 20/.5));
+        platforms.push_back(platform);
+
+        platform.setPosition(0, 370);
+        platform.setTextureRect(sf::IntRect(0, 0, 200/.5, 10/.5));
+        platforms.push_back(platform);
+
+        platform.setPosition(0,window.getSize().y-120);
+        platform.setTextureRect(sf::IntRect(0, 0, window.getSize().x/.5, 120/.5));
+        //platforms.push_back(platform);
     }
 
-    AnimatedSprite hero(10, "C:\\Users\\boukh\\OneDrive\\Bureau\\Character\\character.png");
+    AnimatedSprite hero(10, "C:\\Users\\boukh\\OneDrive\\Bureau\\Character\\character.png"); //player def
     hero.setBounds(0, window.getSize().x, 0, window.getSize().y);
     hero.setSpeed(100,100,10);
-    hero.setPosition(20,120);
+    hero.setPosition(20,380);
     hero.setScale(2.0,2.0);
 
 
@@ -257,33 +262,36 @@ int main()
 
         sf::Time elapsed = clock.restart();
         sf::Event event;
+        bool top = false;
+
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
         window.clear(sf::Color::Black);
 
-        //hero.moveInDirection(elapsed, event.key.code, platforms);
-
-        if(event.type == sf::Event::KeyReleased)
-            {
-                if(event.key.code == sf::Keyboard::Space){
-                    //hero.jump(elapsed);
-                }
+        for (auto &p : platforms){
+            if(hero.Collision_T(p))
+                top = true;
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
-            if (hero.Collision_T(platform))
-                hero.jump(elapsed);
-        } else {
-            if(!hero.Collision_T(platform))
+            if (top==true && dt <= elapsed.asSeconds())
+                hero.jump();
+            dt += elapsed.asSeconds();
+        }
+
+        if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || dt > elapsed.asSeconds()){
+            if(top!=true)
                 hero.fall(elapsed);
             else
-                hero.reset_state();
+            {
+                hero.reset_();
+                dt = 0;
+            }
         }
 
         hero.moveInDirection(elapsed, event.key.code, platforms);
-        //std::cout<<hero.get_state() << "\t" << hero.Collision_T(platform) <<std::endl;
 
         window.draw(grass);
         for (auto &p : platforms){
