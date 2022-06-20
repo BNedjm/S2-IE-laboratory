@@ -10,9 +10,47 @@
 
 class Objects : public sf::Sprite {
 public:
-
+    
 private:
 
+};
+
+class Target : public sf::Sprite {
+public:
+    Target(const int x_speed) : x_speed_(x_speed)
+    {
+    }
+
+    void setSpeed(const int& x_speed) { // set x speed
+        x_speed_ = x_speed;
+    }
+
+    void animate(const sf::Time &elapsed){ // move elements
+        bouncce();
+        move(x_speed_*elapsed.asSeconds(),0);
+    }
+
+    void setBounds(const float& l_bound, const float& r_bound){ // set bounds
+        l_bound_  = l_bound;
+        r_bound_  = r_bound;
+    }
+
+private:
+    int x_speed_ = 0;
+    float l_bound_ = 0;
+    float r_bound_ = 0;
+
+    void bouncce(){ // bounds to speed function
+        sf::FloatRect rectangle_bounds = getGlobalBounds();
+
+        if(rectangle_bounds.left <= l_bound_ ){
+           x_speed_ = abs(x_speed_);
+        }
+
+        if(rectangle_bounds.left + rectangle_bounds.width >= r_bound_){
+            x_speed_ = abs(x_speed_) * -1;
+        }
+    }
 };
 
 int main()
@@ -21,45 +59,39 @@ int main()
 
     sf::Clock clock;
 
-    sf::Texture tex_target;
+    sf::Texture tex_target, tex_player;
 
-    sf::Sprite target_1, target_2,target_3, target_4, target_5; //targets def
-    std::vector <sf::Sprite> targets; // targets vector def
+    int ref_speed = 25;
+
+    std::vector <Target> targets; // targets vector def
     if (!tex_target.loadFromFile("grass.png")) {
         std::cerr << "Could not load texture" << std::endl;
         return 1;
     } else {
         tex_target.setRepeated(true);
-        //-----------------------------------------------------------------------------//target_1
-        target_1.setTexture(tex_target);
-        target_1.setScale(.5,.5);
-        target_1.setPosition(0,130);
-        target_1.setTextureRect(sf::IntRect(0, 0, 100/.5, 20/.5));
-        targets.push_back(target_1);
-        //-----------------------------------------------------------------------------//target_2
-        target_2.setTexture(tex_target);
-        target_2.setScale(.5,.5);
-        target_2.setPosition(0,100);
-        target_2.setTextureRect(sf::IntRect(0, 0, 80/.5, 20/.5));
-        targets.push_back(target_2);
-        //-----------------------------------------------------------------------------//target_3
-        target_3.setTexture(tex_target);
-        target_3.setScale(.5,.5);
-        target_3.setPosition(0,70);
-        target_3.setTextureRect(sf::IntRect(0, 0, 60/.5, 20/.5));
-        targets.push_back(target_3);
-        //-----------------------------------------------------------------------------//target_4
-        target_4.setTexture(tex_target);
-        target_4.setScale(.5,.5);
-        target_4.setPosition(0,40);
-        target_4.setTextureRect(sf::IntRect(0, 0, 40/.5, 20/.5));
-        targets.push_back(target_4);
-        //-----------------------------------------------------------------------------//target_5
-        target_5.setTexture(tex_target);
-        target_5.setScale(.5,.5);
-        target_5.setPosition(0,10);
-        target_5.setTextureRect(sf::IntRect(0, 0, 20/.5, 20/.5));
-        targets.push_back(target_5);
+        for (int i = 1; i < 6; i++){
+            Target target(i*ref_speed); // target elements def
+            target.setTexture(tex_target);
+            target.setBounds(0, window.getSize().x);
+            target.setScale(.5,.5);
+            target.setPosition(10,-20+i*30);
+            target.setTextureRect(sf::IntRect(0, 0, 20*i/.5, 20/.5));
+            targets.push_back(target);
+        }
+    }
+    targets.at(0).setSpeed(40); // set speed for the smallest target
+
+    sf::Sprite player; // player def
+    if (!tex_player.loadFromFile("wall.png")) {
+        std::cerr << "Could not load texture" << std::endl;
+        return 1;
+    } else {
+        tex_player.setRepeated(true);
+        player.setTexture(tex_player);
+        player.setScale(.5,.5);
+        player.setTextureRect(sf::IntRect(0, 0, 20/.5, 160/.5));
+        player.setOrigin(10/.5, 160/.5);
+        player.setPosition(300, 810);
     }
 
     while (window.isOpen()) {
@@ -73,10 +105,20 @@ int main()
         }
         window.clear(sf::Color::Black);
 
-        for(auto &t : targets){
-            window.draw(t); // test draw
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){ // moving the player
+            if(player.getRotation() <= 80 || abs(player.getRotation()-360) <= 90)
+            player.rotate(ref_speed*elapsed.asSeconds());
+        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+            if(player.getRotation() >= 280 || player.getRotation() <= 90)
+            player.rotate(-ref_speed*elapsed.asSeconds());
         }
-
+        
+        for(auto &t : targets){ // moving the targets
+            t.animate(elapsed);
+            window.draw(t);
+        }
+        window.draw(player);
+        
         window.display();
     }
 
