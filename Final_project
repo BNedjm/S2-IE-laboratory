@@ -8,9 +8,45 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+class Player : public sf::Sprite {
+public:
+    Player(const int& ref_speed, const std::string& path) : ref_speed_(ref_speed)
+    {
+        if (!texture_.loadFromFile(path)) {
+            std::cerr << "Could not load texture" << std::endl;
+        } else {
+            texture_.setRepeated(true);
+            setTexture(texture_);
+            setScale(.5,.5);
+            setTextureRect(sf::IntRect(0, 0, 20/.5, 160/.5));
+            setOrigin(getGlobalBounds().width, getGlobalBounds().height/.5);
+            setPosition(300, 810);
+        }
+    }
+
+    void setSpeed(const int& ref_speed) {
+        ref_speed_ = ref_speed;
+    }
+
+    void moveInDirection(const sf::Time &elapsed)
+     {
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){ // moving the player
+            if(getRotation() <= 80 || abs(getRotation()-360) <= 90)
+            rotate(abs(ref_speed_)*elapsed.asSeconds());
+        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+            if(getRotation() >= 280 || getRotation() <= 90)
+            rotate(-abs(ref_speed_)*elapsed.asSeconds());
+        }
+     }
+
+private:
+    sf::Texture texture_;
+    int ref_speed_ = 0;
+};
+
 class Objects : public sf::Sprite {
 public:
-    
+
 private:
 
 };
@@ -81,7 +117,8 @@ int main()
     }
     targets.at(0).setSpeed(40); // set speed for the smallest target
 
-    sf::Sprite player; // player def
+    Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\wall.png");
+    /*sf::Sprite player; // player def
     if (!tex_player.loadFromFile("wall.png")) {
         std::cerr << "Could not load texture" << std::endl;
         return 1;
@@ -92,7 +129,7 @@ int main()
         player.setTextureRect(sf::IntRect(0, 0, 20/.5, 160/.5));
         player.setOrigin(10/.5, 160/.5);
         player.setPosition(300, 810);
-    }
+    }*/
 
     while (window.isOpen()) {
 
@@ -105,20 +142,16 @@ int main()
         }
         window.clear(sf::Color::Black);
 
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){ // moving the player
-            if(player.getRotation() <= 80 || abs(player.getRotation()-360) <= 90)
-            player.rotate(ref_speed*elapsed.asSeconds());
-        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
-            if(player.getRotation() >= 280 || player.getRotation() <= 90)
-            player.rotate(-ref_speed*elapsed.asSeconds());
-        }
-        
+        player.moveInDirection(elapsed);
+
         for(auto &t : targets){ // moving the targets
             t.animate(elapsed);
             window.draw(t);
         }
+
+        std::cout << 800-player.getGlobalBounds().top << std::endl;
         window.draw(player);
-        
+
         window.display();
     }
 
