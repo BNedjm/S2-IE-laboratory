@@ -4,6 +4,8 @@
 #include <numeric>
 #include <iomanip>
 #include <cmath>
+#include <string>
+#include <sstream>
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
@@ -17,7 +19,6 @@ public:
         } else {
             texture_.setRepeated(true);
             setTexture(texture_);
-            //setScale(.5,.5);
             setTextureRect(sf::IntRect(0, 0, 80, 210));
             setOrigin(35, 165);
             setPosition(300, 750);
@@ -46,7 +47,7 @@ private:
 
 class Objects : public sf::Sprite {
 public:
-    Objects(const int fps, const std::string& path) : fps_(fps) //make an initializer list for fps_
+    Objects(const std::string& path) //make an initializer list for fps_
     {
         if (!texture_.loadFromFile(path)) {
             std::cerr << "Could not load texture" << std::endl;
@@ -54,7 +55,7 @@ public:
         setTexture(texture_);
         setTextureRect(sf::IntRect(0, 0, 10, 10));
         setOrigin(5, 5);
-        setPosition(300, 800);
+        setPosition(300, 750);
     }
 
     void setSpeed(const int& x_speed, const int& y_speed) {
@@ -62,23 +63,15 @@ public:
         y_speed_ = y_speed;
     }
 
-    /*void animate(const sf::Time &elapsed){
-        bouncce();
-        float dt = elapsed.asSeconds();
-        t_ = t_ + dt;
-
-        if(t_ > 1.0/fps_){
-            fragments_index++;
-            t_ = 0.0;
+    bool isMoving(){
+        if (x_speed_!=0 || y_speed_!=0){
+            moving_ = true;
         }
-
-        if(fragments_index == running_frames.size()){
-            fragments_index = 0;
-        }
-        setTextureRect(running_frames[fragments_index]);
-    }*/
+        return moving_;
+    }
 
     void animate(const sf::Time elapsed){
+        boom();
         move(x_speed_*elapsed.asSeconds(), y_speed_*elapsed.asSeconds());
     }
 
@@ -89,10 +82,6 @@ public:
         d_bound_  = d_bound  ;
     }
 
-    void add_animation_frame(const sf::IntRect& frame){
-        running_frames.emplace_back(frame);
-    }
-
     bool Collision_T(sf::Sprite wall)
      {
       sf::FloatRect guy_bounds = getGlobalBounds();
@@ -101,7 +90,11 @@ public:
       if ((guy_bounds.top+guy_bounds.height >= wall_bounds.top-3) && (guy_bounds.top < wall_bounds.top)
       && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
        {
-        return 1;
+          x_speed_ = 0;
+          y_speed_ = 0;
+          setPosition(300, 750);
+          moving_ = false;
+          return 1;
        }
       else{return 0;}
      }
@@ -115,7 +108,11 @@ public:
       if ((guy_bounds.left <= wall_bounds.left+wall_bounds.width+3) && (guy_bounds.left+guy_bounds.width > wall_bounds.left+wall_bounds.width)
        && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
        {
-        return 1;
+          x_speed_ = 0;
+          y_speed_ = 0;
+          setPosition(300, 750);
+          moving_ = false;
+          return 1;
        }
       else{return 0;}
      }
@@ -128,7 +125,11 @@ public:
       if ((guy_bounds.top <= wall_bounds.top + wall_bounds.height+3) && (guy_bounds.top+guy_bounds.height > wall_bounds.top+wall_bounds.height)
        && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
        {
-        return 1;
+          x_speed_ = 0;
+          y_speed_ = 0;
+          setPosition(300, 750);
+          moving_ = false;
+          return 1;
        }
       else{return 0;}
      }
@@ -141,41 +142,33 @@ public:
       if ((guy_bounds.left+guy_bounds.width >= wall_bounds.left-3) && (guy_bounds.left < wall_bounds.left)
        && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
        {
-        return 1;
+          x_speed_ = 0;
+          y_speed_ = 0;
+          setPosition(300, 750);
+          moving_ = false;
+          return 1;
        }
       else{return 0;}
      }
 
 private:
     sf::Texture texture_;
-    int fps_;
     int x_speed_ = 0 ;
     int y_speed_ = 0 ;
     float l_bound_ = 0;
     float r_bound_ = 0;
     float u_bound_ = 0;
     float d_bound_ = 0;
-    float t_ = 0.0;
-    unsigned int fragments_index = 0;
-    std::vector<sf::IntRect> running_frames;
+    bool moving_ = false;
 
-    void bouncce(){
+    void boom(){
         sf::FloatRect rectangle_bounds = getGlobalBounds();
-
-        if(rectangle_bounds.top <= u_bound_){
-            y_speed_ = abs(y_speed_);
-        }
-
-        if(rectangle_bounds.top + rectangle_bounds.height >= d_bound_){
-            y_speed_ = abs(y_speed_) * -1;
-        }
-
-        if(rectangle_bounds.left <= l_bound_ ){
-           x_speed_ = abs(x_speed_);
-        }
-
-        if(rectangle_bounds.left + rectangle_bounds.width >= r_bound_){
-            x_speed_ = abs(x_speed_) * -1;
+        if(rectangle_bounds.top <= u_bound_ || rectangle_bounds.top + rectangle_bounds.height >= d_bound_
+              || rectangle_bounds.left <= l_bound_ || rectangle_bounds.left + rectangle_bounds.width >= r_bound_){
+            x_speed_ = 0;
+            y_speed_ = 0;
+            setPosition(300, 750);
+            moving_ = false;
         }
     }
 };
@@ -226,6 +219,33 @@ int main()
 
     sf::Texture tex_target, tex_player_bg, tex_bg;
 
+    //----------------------------------------------------------------------------------
+    sf::Font font;
+    std::vector <sf::Text> texts;
+        if (!font.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\AGENCYB.TTF"))
+        {
+            std::cerr << "Could not load font" << std::endl;
+            return 1;
+        } else {
+            for (int j = 0; j < 6; j++){
+                sf::Text text;
+                text.setFont(font);
+                text.setCharacterSize(24);
+                text.setFillColor(sf::Color::Red);
+                text.setStyle(sf::Text::Bold);
+                texts.push_back(text);
+            }
+        }
+
+    texts.at(0).setPosition(150,750);
+    texts.at(3).setPosition(50,750);
+    texts.at(3).setString("SCORE : ");
+    texts.at(1).setPosition(50,700);
+    texts.at(1).setString("PLAYER  001");
+    texts.at(2).setPosition(50,700);
+    texts.at(2).setString("PLAYER  002");
+    //----------------------------------------------------------------------------------
+
     int ref_speed = 25;
 
     // functional elements
@@ -250,7 +270,8 @@ int main()
 
     Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\shot.png"); // Player def
 
-    Objects rocket(10, "C:\\Users\\boukh\\OneDrive\\Bureau\\grass.png"); // Rocket def
+    Objects rocket("C:\\Users\\boukh\\OneDrive\\Bureau\\grass.png"); // Rocket def
+    rocket.setBounds(0, window.getSize().x,0,window.getSize().y);
     std::vector <Objects> rockets;
     for (int i=0; i<5; i++ ){
         rockets.push_back(rocket);
@@ -277,6 +298,7 @@ int main()
         bg.setTextureRect(sf::IntRect(0, 0, window.getSize().x/.15, window.getSize().y/.15));
     }
 
+    int count = 0, score_1 = 0, score_2 = 0;
 
     while (window.isOpen()) {
 
@@ -291,24 +313,50 @@ int main()
 
         player.moveInDirection(elapsed);
 
-        int count = 0;
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
-            rockets.at(count).setSpeed(static_cast<int>(100*sin(player.getRotation()*M_PI/180)*elapsed.asSeconds()), -static_cast<int>(100*cos(player.getRotation()*M_PI/180)*elapsed.asSeconds()));
-            count++;
-        }
-
-        //std::cout << cos(player.getRotation()) << " " << sin(player.getRotation())<< std::endl;
-        //std::cout << (player.getRotation()) << " " << cos(player.getRotation()*M_PI/180)<< std::endl;
         window.draw(bg);
         window.draw(player_bg);
+
+        if(count < 5 && count != 0){
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
+                rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                count++;
+            }
+
+        }else if (count == 0){
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                count++;
+            }
+        }
+
+        if(count!=0){
+            for (int k=4; k>=0; k--){
+                if (rockets.at(count-1).Collision_B(targets.at(k)) || rockets.at(count-1).Collision_T(targets.at(k))
+                        || rockets.at(count-1).Collision_R(targets.at(k)) || rockets.at(count-1).Collision_L(targets.at(k))){
+                    score_1+=(5-k);
+                }
+            }
+        }
+
         for(auto &r : rockets){ // moving the rockets
             r.animate(elapsed);
             window.draw(r);
         }
+
         window.draw(player);
+
         for(auto &t : targets){ // moving the targets
             t.animate(elapsed);
             window.draw(t);
+        }
+
+        std::stringstream ss;
+        ss << score_1;
+          texts.at(0).setString( ss.str().c_str() );
+
+
+        for(auto &x : texts){ // drawing the texts
+            window.draw(x);
         }
 
         window.display();
