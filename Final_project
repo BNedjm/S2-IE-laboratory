@@ -32,7 +32,7 @@ public:
     void moveInDirection(const sf::Time &elapsed)
      {
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){ // moving the player
-            if(getRotation() <= 80 || abs(getRotation()-360) <= 90)
+            if(getRotation() <= 80 || std::abs(getRotation()-360) <= 90)
             rotate(abs(ref_speed_)*elapsed.asSeconds());
         } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
             if(getRotation() >= 280 || getRotation() <= 90)
@@ -221,7 +221,7 @@ int main()
 
     //----------------------------------------------------------------------------------
     sf::Font font;
-    std::vector <sf::Text> texts;
+    std::vector <sf::Text> texts, refill;
         if (!font.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\AGENCYB.TTF"))
         {
             std::cerr << "Could not load font" << std::endl;
@@ -234,16 +234,27 @@ int main()
                 text.setFillColor(sf::Color::Red);
                 text.setStyle(sf::Text::Bold);
                 texts.push_back(text);
+                text.setFillColor(sf::Color::White);
+                refill.push_back(text);
             }
         }
 
     texts.at(0).setPosition(150,750);
-    texts.at(3).setPosition(50,750);
-    texts.at(3).setString("SCORE : ");
-    texts.at(1).setPosition(50,700);
-    texts.at(1).setString("PLAYER  001");
+    texts.at(1).setPosition(50,750);
+    texts.at(1).setString("SCORE : ");
     texts.at(2).setPosition(50,700);
-    texts.at(2).setString("PLAYER  002");
+    texts.at(3).setPosition(35,400);
+    texts.at(3).setScale(2.5,2.5);
+    texts.at(3).setFillColor(sf::Color::White);
+
+    refill.at(4).setString("*");
+    refill.at(3).setString("*\n*");
+    refill.at(2).setString("*\n*\n*");
+    refill.at(1).setString("*\n*\n*\n*");
+    refill.at(0).setString("*\n*\n*\n*\n*");
+    for (auto &f : refill){
+        f.setPosition(360, 659);
+    }
     //----------------------------------------------------------------------------------
 
     int ref_speed = 25;
@@ -299,6 +310,7 @@ int main()
     }
 
     int count = 0, score_1 = 0, score_2 = 0;
+    bool player_1 = 0, player_2 = 0, halt = 0;
 
     while (window.isOpen()) {
 
@@ -311,36 +323,107 @@ int main()
         }
         window.clear(sf::Color::Black);
 
-        player.moveInDirection(elapsed);
+        //----------------------------------------------------------------------------
+        // multi-player logic
 
-        window.draw(bg);
-        window.draw(player_bg);
+        if(!player_1 && !player_2){
+            if(count < 5 && count != 0){
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
+                    rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    count++;
+                }
 
-        if(count < 5 && count != 0){
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
-                rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
-                count++;
+            }else if (count == 0){
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                    rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    count++;
+                }
             }
 
-        }else if (count == 0){
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
-                rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
-                count++;
+            if(count!=0){
+                for (int k=4; k>=0; k--){
+                    if (rockets.at(count-1).Collision_B(targets.at(k)) || rockets.at(count-1).Collision_T(targets.at(k))
+                            || rockets.at(count-1).Collision_R(targets.at(k)) || rockets.at(count-1).Collision_L(targets.at(k))){
+                        score_1+=(5-k);
+                    }
+                }
+            }
+
+            std::stringstream ss;
+            ss << score_1;
+            texts.at(0).setString( ss.str().c_str() );
+            texts.at(2).setString("PLAYER  001");
+
+        } else if (player_1 && !player_2) {
+            if(count < 5 && count != 0){
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
+                    rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    count++;
+                }
+
+            }else if (count == 0){
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                    rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    count++;
+                }
+            }
+
+            if(count!=0){
+                for (int k=4; k>=0; k--){
+                    if (rockets.at(count-1).Collision_B(targets.at(k)) || rockets.at(count-1).Collision_T(targets.at(k))
+                            || rockets.at(count-1).Collision_R(targets.at(k)) || rockets.at(count-1).Collision_L(targets.at(k))){
+                        score_2+=(5-k);
+                    }
+                }
+            }
+
+            std::stringstream ss;
+            ss << score_2;
+            texts.at(0).setString( ss.str().c_str() );
+            texts.at(2).setString("PLAYER  002");
+        } else if (player_1 && player_2) {
+            if(score_1 > score_2){
+                texts.at(3).setString("WINNER IS PLAYER 001!");
+            } else if (score_1 < score_2){
+                texts.at(3).setString("WINNER IS PLAYER 002!");
+            } else if (score_1 == score_2){
+                texts.at(3).setString("DRAW!");
             }
         }
-
         if(count!=0){
-            for (int k=4; k>=0; k--){
-                if (rockets.at(count-1).Collision_B(targets.at(k)) || rockets.at(count-1).Collision_T(targets.at(k))
-                        || rockets.at(count-1).Collision_R(targets.at(k)) || rockets.at(count-1).Collision_L(targets.at(k))){
-                    score_1+=(5-k);
+            if(!player_1 && !player_2 && !rockets.at(count-1).isMoving()){ // Transaction logic
+                if(count == 5){
+                    count-=5    ;
+                    player_1 = 1;
+                }
+            } else if (player_1 && !player_2 && !rockets.at(count-1).isMoving()){
+                if(count == 5){
+                    count-=5;
+                    player_2 = 1;
                 }
             }
         }
 
+        //---------------------------------------------------------------------------------
+
+        halt = 0; // moving the player
+        for(auto &r : rockets){
+            if(r.isMoving())
+                halt = 1;
+        }
+        if(!halt) player.moveInDirection(elapsed);
+
+        window.draw(bg);
+        window.draw(player_bg);
+        window.draw(refill.at(count));
+
         for(auto &r : rockets){ // moving the rockets
             r.animate(elapsed);
             window.draw(r);
+        }
+
+        for(auto &x : texts){ // drawing the texts
+            window.draw(x);
         }
 
         window.draw(player);
@@ -348,15 +431,6 @@ int main()
         for(auto &t : targets){ // moving the targets
             t.animate(elapsed);
             window.draw(t);
-        }
-
-        std::stringstream ss;
-        ss << score_1;
-          texts.at(0).setString( ss.str().c_str() );
-
-
-        for(auto &x : texts){ // drawing the texts
-            window.draw(x);
         }
 
         window.display();
