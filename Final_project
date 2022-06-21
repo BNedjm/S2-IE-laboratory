@@ -52,16 +52,17 @@ public:
             std::cerr << "Could not load texture" << std::endl;
         }
         setTexture(texture_);
-        setTextureRect(sf::IntRect(0, 0, 25, 25));
+        setTextureRect(sf::IntRect(0, 0, 10, 10));
+        setOrigin(5, 5);
+        setPosition(300, 800);
     }
 
-    void setSpeed(const int& x_speed, const int& y_speed, const int & ro_speed) {
+    void setSpeed(const int& x_speed, const int& y_speed) {
         x_speed_ = x_speed;
         y_speed_ = y_speed;
-        ro_speed_ = ro_speed;
     }
 
-    void animate(const sf::Time &elapsed){
+    /*void animate(const sf::Time &elapsed){
         bouncce();
         float dt = elapsed.asSeconds();
         t_ = t_ + dt;
@@ -75,6 +76,10 @@ public:
             fragments_index = 0;
         }
         setTextureRect(running_frames[fragments_index]);
+    }*/
+
+    void animate(const sf::Time elapsed){
+        move(x_speed_*elapsed.asSeconds(), y_speed_*elapsed.asSeconds());
     }
 
     void setBounds(const float& l_bound, const float& r_bound,const float& u_bound,const float& d_bound){
@@ -140,12 +145,12 @@ public:
        }
       else{return 0;}
      }
+
 private:
     sf::Texture texture_;
     int fps_;
     int x_speed_ = 0 ;
     int y_speed_ = 0 ;
-    int ro_speed_ = 0 ;
     float l_bound_ = 0;
     float r_bound_ = 0;
     float u_bound_ = 0;
@@ -223,8 +228,10 @@ int main()
 
     int ref_speed = 25;
 
+    // functional elements
+
     std::vector <Target> targets; // targets vector def
-    if (!tex_target.loadFromFile("grass.png")) {
+    if (!tex_target.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\target4.png")) {
         std::cerr << "Could not load texture" << std::endl;
         return 1;
     } else {
@@ -233,17 +240,24 @@ int main()
             Target target(i*ref_speed); // target elements def
             target.setTexture(tex_target);
             target.setBounds(0, window.getSize().x);
-            target.setScale(.5,.5);
+            target.setScale(.025,.05);
             target.setPosition(10,-20+i*30);
-            target.setTextureRect(sf::IntRect(0, 0, 20*i/.5, 20/.5));
+            target.setTextureRect(sf::IntRect(0, 0, 20*i/.025, 20/.05));
             targets.push_back(target);
         }
     }
     targets.at(0).setSpeed(40); // set speed for the smallest target
 
-    Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\shot.png");
+    Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\shot.png"); // Player def
+
+    Objects rocket(10, "C:\\Users\\boukh\\OneDrive\\Bureau\\grass.png"); // Rocket def
+    std::vector <Objects> rockets;
+    for (int i=0; i<5; i++ ){
+        rockets.push_back(rocket);
+    }
 
     // non functional elements
+
     sf::Sprite player_bg, bg;
     if (!tex_player_bg.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\tank.png")) {
         std::cerr << "Could not load texture" << std::endl;
@@ -277,15 +291,25 @@ int main()
 
         player.moveInDirection(elapsed);
 
+        int count = 0;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+            rockets.at(count).setSpeed(static_cast<int>(100*sin(player.getRotation()*M_PI/180)*elapsed.asSeconds()), -static_cast<int>(100*cos(player.getRotation()*M_PI/180)*elapsed.asSeconds()));
+            count++;
+        }
+
+        //std::cout << cos(player.getRotation()) << " " << sin(player.getRotation())<< std::endl;
+        //std::cout << (player.getRotation()) << " " << cos(player.getRotation()*M_PI/180)<< std::endl;
+        window.draw(bg);
+        window.draw(player_bg);
+        for(auto &r : rockets){ // moving the rockets
+            r.animate(elapsed);
+            window.draw(r);
+        }
+        window.draw(player);
         for(auto &t : targets){ // moving the targets
             t.animate(elapsed);
             window.draw(t);
         }
-
-        //std::cout << player_bg.getGlobalBounds().width << std::endl;
-        window.draw(bg);
-        window.draw(player_bg);
-        window.draw(player);
 
         window.display();
     }
