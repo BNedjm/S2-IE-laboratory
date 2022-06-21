@@ -17,10 +17,10 @@ public:
         } else {
             texture_.setRepeated(true);
             setTexture(texture_);
-            setScale(.5,.5);
-            setTextureRect(sf::IntRect(0, 0, 20/.5, 160/.5));
-            setOrigin(getGlobalBounds().width, getGlobalBounds().height/.5);
-            setPosition(300, 810);
+            //setScale(.5,.5);
+            setTextureRect(sf::IntRect(0, 0, 80, 210));
+            setOrigin(35, 165);
+            setPosition(300, 750);
         }
     }
 
@@ -46,9 +46,133 @@ private:
 
 class Objects : public sf::Sprite {
 public:
+    Objects(const int fps, const std::string& path) : fps_(fps) //make an initializer list for fps_
+    {
+        if (!texture_.loadFromFile(path)) {
+            std::cerr << "Could not load texture" << std::endl;
+        }
+        setTexture(texture_);
+        setTextureRect(sf::IntRect(0, 0, 25, 25));
+    }
 
+    void setSpeed(const int& x_speed, const int& y_speed, const int & ro_speed) {
+        x_speed_ = x_speed;
+        y_speed_ = y_speed;
+        ro_speed_ = ro_speed;
+    }
+
+    void animate(const sf::Time &elapsed){
+        bouncce();
+        float dt = elapsed.asSeconds();
+        t_ = t_ + dt;
+
+        if(t_ > 1.0/fps_){
+            fragments_index++;
+            t_ = 0.0;
+        }
+
+        if(fragments_index == running_frames.size()){
+            fragments_index = 0;
+        }
+        setTextureRect(running_frames[fragments_index]);
+    }
+
+    void setBounds(const float& l_bound, const float& r_bound,const float& u_bound,const float& d_bound){
+        l_bound_  = l_bound  ;
+        r_bound_  = r_bound  ;
+        u_bound_  = u_bound  ;
+        d_bound_  = d_bound  ;
+    }
+
+    void add_animation_frame(const sf::IntRect& frame){
+        running_frames.emplace_back(frame);
+    }
+
+    bool Collision_T(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.top+guy_bounds.height >= wall_bounds.top-3) && (guy_bounds.top < wall_bounds.top)
+      && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_R(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      guy_bounds.left += 20;
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.left <= wall_bounds.left+wall_bounds.width+3) && (guy_bounds.left+guy_bounds.width > wall_bounds.left+wall_bounds.width)
+       && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_B(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.top <= wall_bounds.top + wall_bounds.height+3) && (guy_bounds.top+guy_bounds.height > wall_bounds.top+wall_bounds.height)
+       && (guy_bounds.left+guy_bounds.width > wall_bounds.left+3) && (guy_bounds.left < wall_bounds.left+wall_bounds.width-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
+
+    bool Collision_L(sf::Sprite wall)
+     {
+      sf::FloatRect guy_bounds = getGlobalBounds();
+      sf::FloatRect wall_bounds = wall.getGlobalBounds();
+
+      if ((guy_bounds.left+guy_bounds.width >= wall_bounds.left-3) && (guy_bounds.left < wall_bounds.left)
+       && (guy_bounds.top+guy_bounds.height > wall_bounds.top+3) && (guy_bounds.top < wall_bounds.top+wall_bounds.height-3))
+       {
+        return 1;
+       }
+      else{return 0;}
+     }
 private:
+    sf::Texture texture_;
+    int fps_;
+    int x_speed_ = 0 ;
+    int y_speed_ = 0 ;
+    int ro_speed_ = 0 ;
+    float l_bound_ = 0;
+    float r_bound_ = 0;
+    float u_bound_ = 0;
+    float d_bound_ = 0;
+    float t_ = 0.0;
+    unsigned int fragments_index = 0;
+    std::vector<sf::IntRect> running_frames;
 
+    void bouncce(){
+        sf::FloatRect rectangle_bounds = getGlobalBounds();
+
+        if(rectangle_bounds.top <= u_bound_){
+            y_speed_ = abs(y_speed_);
+        }
+
+        if(rectangle_bounds.top + rectangle_bounds.height >= d_bound_){
+            y_speed_ = abs(y_speed_) * -1;
+        }
+
+        if(rectangle_bounds.left <= l_bound_ ){
+           x_speed_ = abs(x_speed_);
+        }
+
+        if(rectangle_bounds.left + rectangle_bounds.width >= r_bound_){
+            x_speed_ = abs(x_speed_) * -1;
+        }
+    }
 };
 
 class Target : public sf::Sprite {
@@ -95,7 +219,7 @@ int main()
 
     sf::Clock clock;
 
-    sf::Texture tex_target, tex_player;
+    sf::Texture tex_target, tex_player_bg, tex_bg;
 
     int ref_speed = 25;
 
@@ -117,19 +241,28 @@ int main()
     }
     targets.at(0).setSpeed(40); // set speed for the smallest target
 
-    Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\wall.png");
-    /*sf::Sprite player; // player def
-    if (!tex_player.loadFromFile("wall.png")) {
+    Player player(50, "C:\\Users\\boukh\\OneDrive\\Bureau\\shot.png");
+
+    // non functional elements
+    sf::Sprite player_bg, bg;
+    if (!tex_player_bg.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\tank.png")) {
         std::cerr << "Could not load texture" << std::endl;
         return 1;
     } else {
-        tex_player.setRepeated(true);
-        player.setTexture(tex_player);
-        player.setScale(.5,.5);
-        player.setTextureRect(sf::IntRect(0, 0, 20/.5, 160/.5));
-        player.setOrigin(10/.5, 160/.5);
-        player.setPosition(300, 810);
-    }*/
+        player_bg.setTexture(tex_player_bg);
+        player_bg.setPosition(249,652);
+    }
+
+    if (!tex_bg.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\bg.png")) {
+        std::cerr << "Could not load texture" << std::endl;
+        return 1;
+    } else {
+        tex_bg.setRepeated(true);
+        bg.setScale(.15, .15);
+        bg.setTexture(tex_bg);
+        bg.setTextureRect(sf::IntRect(0, 0, window.getSize().x/.15, window.getSize().y/.15));
+    }
+
 
     while (window.isOpen()) {
 
@@ -149,7 +282,9 @@ int main()
             window.draw(t);
         }
 
-        std::cout << 800-player.getGlobalBounds().top << std::endl;
+        //std::cout << player_bg.getGlobalBounds().width << std::endl;
+        window.draw(bg);
+        window.draw(player_bg);
         window.draw(player);
 
         window.display();
