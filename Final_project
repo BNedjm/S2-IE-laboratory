@@ -221,10 +221,19 @@ int main()
     sf::Texture tex_target, tex_player_bg, tex_bg;
 
     //----------------------------------------------------------------------------------
-    
+
+    sf::Music music;
+    if (!music.openFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\music.ogg")){
+        return 0;
+    }
+
+    music.setLoop(true);
+    music.setVolume(20.f);
+    music.play();
+
     sf::SoundBuffer buffer_1, buffer_2;
     sf::Sound sound_1, sound_2;
-    
+
     if (!buffer_1.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\sound1.wav"))
     {
         std::cerr << "Could not load font" << std::endl;
@@ -242,7 +251,7 @@ int main()
     }
 
     //----------------------------------------------------------------------------------
-    
+
     sf::Font font;
     std::vector <sf::Text> texts, refill;
         if (!font.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\AGENCYB.TTF"))
@@ -281,6 +290,7 @@ int main()
     for (auto &f : refill){
         f.setPosition(360, 659);
     }
+    
     //----------------------------------------------------------------------------------
 
     int ref_speed = 25;
@@ -358,6 +368,7 @@ int main()
         window.draw(refill.at(count));
 
         //----------------------------------------------------------------------------------
+        
         // multi-player logic
 
         if(!player_1 && !player_2){
