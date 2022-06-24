@@ -17,7 +17,6 @@ public:
         if (!texture_.loadFromFile(path)) {
             std::cerr << "Could not load texture" << std::endl;
         } else {
-            texture_.setRepeated(true);
             setTexture(texture_);
             setTextureRect(sf::IntRect(0, 0, 80, 210));
             setOrigin(35, 165);
@@ -47,15 +46,16 @@ private:
 
 class Objects : public sf::Sprite {
 public:
-    Objects(const std::string& path) //make an initializer list for fps_
+    Objects(const std::string& path)
     {
         if (!texture_.loadFromFile(path)) {
             std::cerr << "Could not load texture" << std::endl;
+        } else {
+            setTexture(texture_);
+            setTextureRect(sf::IntRect(0, 0, 10, 10));
+            setOrigin(5, 5);
+            setPosition(300, 750);
         }
-        setTexture(texture_);
-        setTextureRect(sf::IntRect(0, 0, 10, 10));
-        setOrigin(5, 5);
-        setPosition(300, 750);
     }
 
     void setSpeed(const int& x_speed, const int& y_speed) {
@@ -334,7 +334,7 @@ int main()
         window.draw(player_bg);
         window.draw(refill.at(count));
 
-        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------
         // multi-player logic
 
         if(!player_1 && !player_2){
@@ -429,7 +429,7 @@ int main()
             }
         }
 
-        //---------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------
 
         halt = 0; // moving the player
         for(auto &r : rockets){
