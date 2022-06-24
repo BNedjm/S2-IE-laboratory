@@ -9,6 +9,7 @@
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 class Player : public sf::Sprite {
 public:
@@ -220,6 +221,28 @@ int main()
     sf::Texture tex_target, tex_player_bg, tex_bg;
 
     //----------------------------------------------------------------------------------
+    
+    sf::SoundBuffer buffer_1, buffer_2;
+    sf::Sound sound_1, sound_2;
+    
+    if (!buffer_1.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\sound1.wav"))
+    {
+        std::cerr << "Could not load font" << std::endl;
+        return 1;
+    } else {
+        sound_1.setBuffer(buffer_1);
+    }
+
+    if (!buffer_2.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\sound2.wav"))
+    {
+        std::cerr << "Could not load font" << std::endl;
+        return 1;
+    } else {
+        sound_2.setBuffer(buffer_2);
+    }
+
+    //----------------------------------------------------------------------------------
+    
     sf::Font font;
     std::vector <sf::Text> texts, refill;
         if (!font.loadFromFile("C:\\Users\\boukh\\OneDrive\\Bureau\\AGENCYB.TTF"))
@@ -341,12 +364,14 @@ int main()
             if(count < 5 && count != 0){
                 if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !rockets.at(count-1).isMoving()){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    sound_1.play();
                     count++;
                 }
 
             }else if (count == 0){
                 if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    sound_1.play();
                     count++;
                 }
             }
@@ -369,12 +394,14 @@ int main()
             if(count < 5 && count != 0){
                 if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !rockets.at(count-1).isMoving()){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    sound_1.play();
                     count++;
                 }
 
             }else if (count == 0){
                 if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
+                    sound_1.play();
                     count++;
                 }
             }
@@ -423,6 +450,7 @@ int main()
                 texts.at(4).setString("");
                 score_1 = 0; score_2 = 0;
                 player_1 = 0; player_2 = 0;
+                sound_2.play();
             } else {
                 window.draw(try_again);
                 texts.at(4).setString("P L A Y  A G A I N ?");
@@ -456,5 +484,6 @@ int main()
 
         window.display();
     }
+
     return 0;
 }
