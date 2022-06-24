@@ -31,10 +31,10 @@ public:
 
     void moveInDirection(const sf::Time &elapsed)
      {
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){ // moving the player
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){ // moving the player
             if(getRotation() <= 80 || std::abs(getRotation()-360) <= 90)
             rotate(abs(ref_speed_)*elapsed.asSeconds());
-        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+        } else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
             if(getRotation() >= 280 || getRotation() <= 90)
             rotate(-abs(ref_speed_)*elapsed.asSeconds());
         }
@@ -243,9 +243,12 @@ int main()
     texts.at(1).setPosition(50,750);
     texts.at(1).setString("SCORE : ");
     texts.at(2).setPosition(50,700);
-    texts.at(3).setPosition(35,400);
+    texts.at(3).setPosition(35,350);
     texts.at(3).setScale(2.5,2.5);
     texts.at(3).setFillColor(sf::Color::White);
+    texts.at(4).setPosition(200,456);
+    texts.at(4).setCharacterSize(30);
+    texts.at(4).setFillColor(sf::Color::White);
 
     refill.at(4).setString("*");
     refill.at(3).setString("*\n*");
@@ -288,6 +291,10 @@ int main()
         rockets.push_back(rocket);
     }
 
+    sf::RectangleShape try_again(sf::Vector2f(300, 50)); //button
+    try_again.setFillColor(sf::Color::Red);
+    try_again.setPosition(150,450);
+
     // non functional elements
 
     sf::Sprite player_bg, bg;
@@ -323,18 +330,22 @@ int main()
         }
         window.clear(sf::Color::Black);
 
+        window.draw(bg);
+        window.draw(player_bg);
+        window.draw(refill.at(count));
+
         //----------------------------------------------------------------------------
         // multi-player logic
 
         if(!player_1 && !player_2){
             if(count < 5 && count != 0){
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
+                if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !rockets.at(count-1).isMoving()){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
                     count++;
                 }
 
             }else if (count == 0){
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
                     count++;
                 }
@@ -356,13 +367,13 @@ int main()
 
         } else if (player_1 && !player_2) {
             if(count < 5 && count != 0){
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !rockets.at(count-1).isMoving()){
+                if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !rockets.at(count-1).isMoving()){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
                     count++;
                 }
 
             }else if (count == 0){
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                if((sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))){
                     rockets.at(count).setSpeed(static_cast<int>(200*sin(player.getRotation()*M_PI/180)), -static_cast<int>(200*cos(player.getRotation()*M_PI/180)));
                     count++;
                 }
@@ -390,6 +401,7 @@ int main()
                 texts.at(3).setString("DRAW!");
             }
         }
+
         if(count!=0){
             if(!player_1 && !player_2 && !rockets.at(count-1).isMoving()){ // Transaction logic
                 if(count == 5){
@@ -402,6 +414,19 @@ int main()
                     player_2 = 1;
                 }
             }
+        } else if (player_1 && player_2){
+            // reset parameters if player wants to try again
+            sf::Vector2i mouse = sf::Mouse::getPosition(window);
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) || ((sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                && mouse.x > 150 && mouse.x < 450 && mouse.y > 450 && mouse.y < 500)){
+                texts.at(3).setString("");
+                texts.at(4).setString("");
+                score_1 = 0; score_2 = 0;
+                player_1 = 0; player_2 = 0;
+            } else {
+                window.draw(try_again);
+                texts.at(4).setString("P L A Y  A G A I N ?");
+            }
         }
 
         //---------------------------------------------------------------------------------
@@ -412,10 +437,6 @@ int main()
                 halt = 1;
         }
         if(!halt) player.moveInDirection(elapsed);
-
-        window.draw(bg);
-        window.draw(player_bg);
-        window.draw(refill.at(count));
 
         for(auto &r : rockets){ // moving the rockets
             r.animate(elapsed);
@@ -435,6 +456,5 @@ int main()
 
         window.display();
     }
-
     return 0;
 }
